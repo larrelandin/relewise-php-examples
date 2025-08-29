@@ -1,0 +1,20 @@
+{
+    "name": "lalre/relewise-php-test",
+    "type": "project",
+    "require": {
+        "guzzlehttp/guzzle": "^7.10",
+        "relewise/client": "^2.12"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "RelewisePhpExamples\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Larre Ländin",
+            "email": "3859057+larrelandin@users.noreply.github.com"
+        }
+    ]
+}

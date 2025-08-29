@@ -1,0 +1,20 @@
+# Ignore Composer dependencies
+/vendor/
+
+# Ignore environment/config files
+.env
+/config/
+credentials.php
+
+# Ignore system/editor files
+.DS_Store
+Thumbs.db
+
+# Log/output/cache/temp
+*.log
+*.cache
+
+# Ignore OS-specific hidden files
+desktop.ini
+
+*.lock

@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"Relewise-MCP": {
+			"url": "https://mcp.relewise.com",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}
