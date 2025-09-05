@@ -6,6 +6,13 @@ use Relewise\Models\ProductSearchRequest;
 use Relewise\Models\Language;
 use Relewise\Models\Currency;
 use Relewise\Factory\UserFactory;
+use \Relewise\Models\BrandIdFilter;
+use Relewise\Models\ProductDataFilter;
+use Relewise\Models\ValueConditionCollection;
+use Relewise\Models\ContainsCondition;
+use Relewise\Models\DataValue;
+
+use function PHPSTORM_META\type;
 
 // Load environment variables from .env if available
 require_once __DIR__ . '/../src/env.php';
@@ -52,7 +59,7 @@ $facetQuery->setItems($categoryFacet, $brandFacet, $marginFacet);
 
 // Create the product search request with all required arguments
 $request = ProductSearchRequest::create(
-    $language,
+    $language,  
     $currency,
     $user,
     $displayedAtLocation,
@@ -63,6 +70,37 @@ $request = ProductSearchRequest::create(
 $request->setSettings($settings);
 $request->setFacets($facetQuery);
 
+$filters = [];
+
+// Apply margin filter from GET parameter if present
+if (isset($_GET['margin'])) {
+    $margin = $_GET['margin'];
+
+    $dataValue = DataValue::create()
+        ->setType(\Relewise\Models\DataValueDataValueTypes::String)
+        ->setValue($margin);
+
+    $marginFilter = ProductDataFilter::create('Margin', filterOutIfKeyIsNotFound: true)
+        ->setMustMatchAllConditions(true)
+        ->setConditions(
+            ValueConditionCollection::create(
+                ContainsCondition::create()->setValue($dataValue)
+            )
+        );
+
+    $filters[] = $marginFilter;
+}
+// Apply brand filter if present
+if (isset($_GET['brand'])) {
+    $brand = $_GET['brand'];
+    $brandFilter = BrandIdFilter::create();
+    $brandFilter->setBrandIdsFromArray([$brand]);
+    $filters[] = $brandFilter;
+}
+    
+if (!empty($filters)) {
+    $request->setFilters(\Relewise\Models\FilterCollection::create(...$filters));
+}
 // Send the search request
 $response = $searcher->productSearch($request);
 
@@ -88,7 +126,7 @@ if (isset($response->facets) && isset($response->facets->items)) {
     }
 
     // Output other facets (Brand, Margin, etc.)
-    echo '<h2>Other Facets</h2>';
+    echo '<h2>Facets</h2>';
     foreach ($response->facets->items as $facet) {
         if ($facet instanceof \Relewise\Models\CategoryFacetResult) continue;
         if (isset($facet->available) && is_array($facet->available) && count($facet->available) > 0) {
@@ -102,9 +140,19 @@ if (isset($response->facets) && isset($response->facets->items)) {
                     $name = $item->value->id;
                 } elseif (isset($item->value)) {
                     $name = $item->value;
+                } elseif (property_exists($item, 'value')) {
+                    $name = $item->value;
                 }
                 $hits = isset($item->hits) ? $item->hits : 0;
-                echo '<li>' . htmlspecialchars($name) . ' - ' . htmlspecialchars($hits) . ' hits</li>';
+                // Build URL with all current GET parameters and add/update the facet
+                $params = $_GET;
+                if ($facetType === 'BrandFacetResult') {
+                    $params['brand'] = $name;
+                } elseif ($facetType === 'ProductDataStringValueFacetResult') {
+                    $params['margin'] = $name;
+                }
+                $url = $_SERVER['PHP_SELF'] . '?' . http_build_query($params);
+                echo '<li><a href="' . htmlspecialchars($url) . '">' . htmlspecialchars($name) . '</a> - ' . htmlspecialchars($hits) . ' hits</li>';
             }
             echo '</ul>';
         }
