@@ -11,6 +11,8 @@ use Relewise\Models\ProductDataFilter;
 use Relewise\Models\ValueConditionCollection;
 use Relewise\Models\ContainsCondition;
 use Relewise\Models\DataValue;
+use Relewise\Models\ByHitsFacetSorting;
+use Relewise\Models\FacetSorting;
 
 use function PHPSTORM_META\type;
 
@@ -44,10 +46,14 @@ $settings->selectedProductProperties = $selectedProps;
 
 
 // Add facets for product categories, brand, and margin
+$facetSettings = \Relewise\Models\FacetSettings::create();
+$facetSettings->setTake(4);
+$facetSettings->setSorting(ByHitsFacetSorting::create());
+
+
 $facetQuery = \Relewise\Models\ProductFacetQuery::create();
-$categoryFacet = \Relewise\Models\CategoryFacet::create(
-    \Relewise\Models\CategorySelectionStrategy::Ancestors
-);
+$categoryFacet = \Relewise\Models\CategoryFacet::create(\Relewise\Models\CategorySelectionStrategy::Ancestors);
+
 $brandFacet = \Relewise\Models\BrandFacet::create();
 $marginFacet = \Relewise\Models\ProductDataStringValueFacet::create(
     \Relewise\Models\DataSelectionStrategy::Product,
@@ -55,6 +61,9 @@ $marginFacet = \Relewise\Models\ProductDataStringValueFacet::create(
     null,
     null
 );
+
+$marginFacet->setSettings($facetSettings);
+
 $facetQuery->setItems($categoryFacet, $brandFacet, $marginFacet);
 
 // Create the product search request with all required arguments
