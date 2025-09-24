@@ -53,10 +53,12 @@ $request = ProductSearchRequest::create(
 $request->setSettings($settings);
 $request->setFacets($facetQuery);
 
+// Send the search request
+
 // --- Product Category Search Request ---
 $catSettings = ProductCategorySearchSettings::create();
 $catSelectedProps = SelectedProductCategoryPropertiesSettings::create();
-$catSelectedProps->setDisplayName(true)->setPaths(true);
+$catSelectedProps->setDisplayName(true)->setPaths(true)->setDataKeysFromArray(["Description", "ImagePath"]);
 $catSettings->setSelectedCategoryProperties($catSelectedProps);
 
 $catRequest = ProductCategorySearchRequest::create(
@@ -70,6 +72,8 @@ $catRequest = ProductCategorySearchRequest::create(
 );
 $catRequest->setSettings($catSettings);
 
+// --- Batch both requests if possible ---
+
 // Batch both requests using SearchRequestCollection
 $batch = SearchRequestCollection::create();
 $batch->addToRequests($request);
@@ -80,6 +84,8 @@ $batchResponses = $searcher->batchsearch($batch);
 $productResponse = null;
 $categoryResponse = null;
 
+
+// Try both object and array access for 'Responses'
 
 // Normalize the batch response to associative array and handle different key namings
 $batchArray = json_decode(json_encode($batchResponses), true);
@@ -109,6 +115,12 @@ if (!$categoryResponse && isset($responsesArr[1])) {
     $categoryResponse = $responsesArr[1];
 }
 
+
+
+
+
+
+// Show total hit count at the top (try both 'Hits' and 'hits')
 // Show total hit count at the top (support 'hits' and 'Hits')
 $hits = $productResponse['hits'] ?? $productResponse['Hits'] ?? null;
 if ($hits !== null) {
